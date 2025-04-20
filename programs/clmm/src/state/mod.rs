@@ -9,11 +9,12 @@ use crate::libraries::big_num::U256;
 #[derive(InitSpace, Default, Debug)]
 pub struct PoolState {
     pub bump: u8,
+    pub tick_spacing: u16,
     pub tick_current: i32,
     pub token0: Pubkey,
     pub token1: Pubkey,
     pub fee_rate: u32, // units of hundredths of a basis point(0.0001%)
-    pub protocal_fee_ratio: u32,
+    pub protocol_fee_ratio: u32,
 
     pub liquidity: u128,
     pub sqrt_price: u128,
