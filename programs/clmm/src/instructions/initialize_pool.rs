@@ -2,7 +2,10 @@ use anchor_lang::prelude::*;
 
 use crate::libraries::big_num::U256;
 use crate::PoolState;
+use crate::TickStateArrayBitMap;
+use crate::ANCHOR_SIZE;
 use crate::POOL_SEED;
+use crate::TICK_ARRAY_BITMAP_SEED;
 
 #[derive(Accounts)]
 #[instruction(token0: Pubkey, token1: Pubkey)]
@@ -13,11 +16,23 @@ pub struct InitializePool<'info> {
     #[account(
         init_if_needed,
         payer = signer,
-        space = 8 + PoolState::INIT_SPACE,
+        space = ANCHOR_SIZE + PoolState::LEN,
         seeds = [POOL_SEED.as_bytes(), token0.as_ref(), token1.as_ref()],
         bump
     )]
     pub pool_state: AccountLoader<'info, PoolState>,
+
+    #[account(
+        init,
+        payer = signer,
+        space = ANCHOR_SIZE + TickStateArrayBitMap::LEN,
+        seeds = [
+            TICK_ARRAY_BITMAP_SEED.as_bytes(), 
+            pool_state.key().as_ref()
+        ],
+        bump
+    )]
+    pub tick_array_bitmap: AccountLoader<'info, TickStateArrayBitMap>,
     pub system_program: Program<'info, System>,
 }
 

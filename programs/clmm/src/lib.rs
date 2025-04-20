@@ -39,7 +39,7 @@ pub mod clmm {
         todo!()
     }
 
-    pub fn update_protocal_parameters(_ctx: Context<Initialize>) -> Result<()> {
+    pub fn update_protocol_parameters(_ctx: Context<Initialize>) -> Result<()> {
         todo!()
     }
 

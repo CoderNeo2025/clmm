@@ -6,7 +6,7 @@ use crate::libraries::big_num::U256;
 
 #[account(zero_copy)]
 #[repr(C, packed)]
-#[derive(InitSpace, Default, Debug)]
+#[derive(Default, Debug)]
 pub struct PoolState {
     pub bump: u8,
     pub tick_spacing: u16,
@@ -24,11 +24,35 @@ pub struct PoolState {
     pub protocol_fees1: u128,
 }
 
+impl PoolState {
+    pub const LEN: usize =
+        1 +
+        2 +
+        4 +
+        32 +
+        32 +
+        4 +
+        4 +
+        16 +
+        16 +
+        32 +
+        32 +
+        16 +
+        16;
+}
+
 #[account(zero_copy)]
 #[repr(C, packed)]
-#[derive(InitSpace, Default, Debug)]
+#[derive(Default, Debug)]
 pub struct PositionState {
     pub liquidity: u128,
     pub fee_growth_inside0_last: U256,
     pub fee_growth_inside1_last: U256,
+}
+
+impl PositionState {
+    pub const LEN: usize =
+        16 +
+        32 +
+        32;
 }
