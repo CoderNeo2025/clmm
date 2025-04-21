@@ -9,4 +9,8 @@ pub enum ErrorCode {
     // second inequality must be < because the price can never reach the price at the max tick
     #[msg("sqrt_price_x64 out of range")]
     SqrtPriceX64,
+    #[msg("tick_spacing must be greater than 0.")]
+    TickSpacingZero,
+    #[msg("token pair must be sorted.")]
+    TokenPairOrder,
 }

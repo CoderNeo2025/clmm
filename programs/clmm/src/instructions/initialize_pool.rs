@@ -5,7 +5,10 @@ use crate::PoolState;
 use crate::TickStateArrayBitMap;
 use crate::ANCHOR_SIZE;
 use crate::POOL_SEED;
+use crate::SQRT_PRICE_X64_MAX;
+use crate::SQRT_PRICE_X64_MIN;
 use crate::TICK_ARRAY_BITMAP_SEED;
+use crate::error::ErrorCode;
 
 #[derive(Accounts)]
 #[instruction(token0: Pubkey, token1: Pubkey)]
@@ -39,6 +42,10 @@ pub struct InitializePool<'info> {
 pub fn initialize_pool_impl(ctx: Context<InitializePool>, tick_spacing: u16,
                token0: Pubkey, token1: Pubkey, sqrt_price_x64: u128,
                fee_ratio: u32, protocol_fee: u32) -> Result<()> {
+    require!(tick_spacing > 0, ErrorCode::TickSpacingZero);
+    require!(token0 < token1, ErrorCode::TokenPairOrder);
+    require!(sqrt_price_x64 <= SQRT_PRICE_X64_MAX && sqrt_price_x64 >= SQRT_PRICE_X64_MIN,
+            ErrorCode::SqrtPriceX64);
     let pool_state = &mut ctx.accounts.pool_state.load_init()?;
     pool_state.bump = ctx.bumps.pool_state;
     pool_state.tick_spacing = tick_spacing;
@@ -54,6 +61,7 @@ pub fn initialize_pool_impl(ctx: Context<InitializePool>, tick_spacing: u16,
     pool_state.protocol_fees0 = 0;
     pool_state.protocol_fees1 = 0;
     pool_state.liquidity = 0;
-    
+
+    msg!("Pool for {} and {} has been created", token0, token1);
     Ok(())
 }
