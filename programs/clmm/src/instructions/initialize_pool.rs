@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 
-use crate::libraries::big_num::U256;
 use crate::PoolState;
 use crate::TickStateArrayBitMap;
 use crate::ANCHOR_SIZE;
@@ -47,8 +46,8 @@ pub fn initialize_pool_impl(ctx: Context<InitializePool>, tick_spacing: u16,
     pool_state.fee_rate = fee_ratio;
     pool_state.protocol_fee_ratio = protocol_fee;
 
-    pool_state.fee_growth_global0 = U256::zero();
-    pool_state.fee_growth_global1 = U256::zero();
+    pool_state.fee_growth_global0_x64 = 0;
+    pool_state.fee_growth_global1_x64 = 0;
     pool_state.protocol_fees0 = 0;
     pool_state.protocol_fees1 = 0;
     pool_state.liquidity = 0;

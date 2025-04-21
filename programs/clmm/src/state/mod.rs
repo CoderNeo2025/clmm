@@ -2,7 +2,6 @@ pub mod tick;
 pub use tick::*;
 
 use anchor_lang::prelude::*;
-use crate::libraries::big_num::U256;
 
 #[account(zero_copy)]
 #[repr(C, packed)]
@@ -17,9 +16,10 @@ pub struct PoolState {
     pub protocol_fee_ratio: u32,
 
     pub liquidity: u128,
-    pub sqrt_price: u128,
-    pub fee_growth_global0: U256,
-    pub fee_growth_global1: U256,
+    /// sqrt(token1/token0), Q64.64 value
+    pub sqrt_price_x64: u128,
+    pub fee_growth_global0_x64: u128,
+    pub fee_growth_global1_x64: u128,
     pub protocol_fees0: u128,
     pub protocol_fees1: u128,
 }
@@ -35,8 +35,8 @@ impl PoolState {
         4 +
         16 +
         16 +
-        32 +
-        32 +
+        16 +
+        16 +
         16 +
         16;
 }
@@ -46,13 +46,13 @@ impl PoolState {
 #[derive(Default, Debug)]
 pub struct PositionState {
     pub liquidity: u128,
-    pub fee_growth_inside0_last: U256,
-    pub fee_growth_inside1_last: U256,
+    pub fee_growth_inside0_last_x64: u128,
+    pub fee_growth_inside1_last_x64: u128,
 }
 
 impl PositionState {
     pub const LEN: usize =
         16 +
-        32 +
-        32;
+        16 +
+        16;
 }
