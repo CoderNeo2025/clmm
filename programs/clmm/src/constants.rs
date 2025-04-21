@@ -25,9 +25,16 @@ pub const FEE_RATE_DENOMINATOR_VALUE: u32 = 1_000_000;
 pub const TICK_ARRAY_SIZE: usize = 60;
 
 #[constant]
-pub const TICK_ARRAY_BITMAP_SIZE: usize = (10240 - 128 - 8 - 32)/2/8;
+pub const TICK_ARRAY_BITMAP_SIZE: usize = 128;
 
 #[constant]
-pub const TICK_MIN: i32 = -(TICK_ARRAY_BITMAP_SIZE as i32 * TICK_ARRAY_SIZE as i32);
+pub const TICK_MAX: i32 = 443636;
 #[constant]
-pub const TICK_MAX: i32 = -TICK_MIN;
+pub const TICK_MIN: i32 = -443636;
+
+/// The minimum value that can be returned from #get_sqrt_price_at_tick. Equivalent to get_sqrt_price_at_tick(TICK_MIN)
+#[constant]
+pub const SQRT_PRICE_X64_MIN: u128 = 4295048016;
+/// The maximum value that can be returned from #get_sqrt_price_at_tick. Equivalent to get_sqrt_price_at_tick(TICK_MAX)
+#[constant]
+pub const SQRT_PRICE_X64_MAX: u128 = 79226673521066979257578248091;

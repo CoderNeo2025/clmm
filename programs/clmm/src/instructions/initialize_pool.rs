@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+use crate::libraries::tick_math;
 use crate::PoolState;
 use crate::TickStateArrayBitMap;
 use crate::ANCHOR_SIZE;
@@ -36,7 +37,7 @@ pub struct InitializePool<'info> {
 }
 
 pub fn initialize_pool_impl(ctx: Context<InitializePool>, tick_spacing: u16,
-               token0: Pubkey, token1: Pubkey, 
+               token0: Pubkey, token1: Pubkey, sqrt_price_x64: u128,
                fee_ratio: u32, protocol_fee: u32) -> Result<()> {
     let pool_state = &mut ctx.accounts.pool_state.load_init()?;
     pool_state.bump = ctx.bumps.pool_state;
@@ -45,13 +46,14 @@ pub fn initialize_pool_impl(ctx: Context<InitializePool>, tick_spacing: u16,
     pool_state.token1 = token1;
     pool_state.fee_rate = fee_ratio;
     pool_state.protocol_fee_ratio = protocol_fee;
+    pool_state.sqrt_price_x64 = sqrt_price_x64;
+    pool_state.tick_current = tick_math::get_tick_at_sqrt_price(sqrt_price_x64)?;
 
     pool_state.fee_growth_global0_x64 = 0;
     pool_state.fee_growth_global1_x64 = 0;
     pool_state.protocol_fees0 = 0;
     pool_state.protocol_fees1 = 0;
     pool_state.liquidity = 0;
-    pool_state.tick_current = 0;
     
     Ok(())
 }

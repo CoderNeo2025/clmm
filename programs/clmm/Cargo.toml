@@ -22,3 +22,8 @@ anchor-lang = {version = "0.31.0", features = ["init-if-needed", "anchor-debug"]
 
 uint = "0.10"
 bytemuck = { version = "1.22.0", features = ["derive", "min_const_generics"] }
+
+[dev-dependencies]
+quickcheck = "0.9"
+proptest = "1.0"
+rand = "0.8.5"
