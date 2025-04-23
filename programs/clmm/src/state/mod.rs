@@ -1,5 +1,7 @@
+#[macro_use]
 pub mod tick;
 pub use tick::*;
+pub use tick_index_check;
 
 pub mod pool;
 pub use pool::*;

@@ -4,14 +4,14 @@ use anchor_spl::token_interface::TokenAccount;
 use anchor_spl::token_interface::TokenInterface;
 
 use crate::libraries::tick_math;
-use crate::PoolState;
-use crate::TickStateArrayBitMap;
-use crate::ANCHOR_SIZE;
-use crate::POOL_SEED;
-use crate::POOL_VAULT_SEED;
-use crate::SQRT_PRICE_X64_MAX;
-use crate::SQRT_PRICE_X64_MIN;
-use crate::TICK_ARRAY_BITMAP_SEED;
+use crate::state::PoolState;
+use crate::state::TickStateArrayBitMap;
+use crate::constants::ANCHOR_SIZE;
+use crate::constants::POOL_SEED;
+use crate::constants::POOL_VAULT_SEED;
+use crate::constants::SQRT_PRICE_X64_MAX;
+use crate::constants::SQRT_PRICE_X64_MIN;
+use crate::constants::TICK_ARRAY_BITMAP_SEED;
 use crate::error::ErrorCode;
 
 #[derive(Accounts)]

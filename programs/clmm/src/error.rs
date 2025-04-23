@@ -13,4 +13,22 @@ pub enum ErrorCode {
     TickSpacingZero,
     #[msg("token pair must be sorted.")]
     TokenPairOrder,
+    #[msg("Invalid tick index value")]
+    InvalidTickIndex,
+
+    // Liquidity Sub
+    #[msg("Liquidity sub delta L must be smaller than before")]
+    LiquiditySubValueErr,
+    // Liquidity Add
+    #[msg("Liquidity add delta L must be greater, or equal to before")]
+    LiquidityAddValueErr,
+    #[msg("Invaild liquidity when update position")]
+    InvaildLiquidity,
+    #[msg("Both token amount must not be zero while supply liquidity")]
+    ForbidBothZeroForSupplyLiquidity,
+    #[msg("Liquidity insufficient")]
+    LiquidityInsufficient,
+
+    #[msg("Max token overflow")]
+    MaxTokenOverflow,
 }

@@ -1,6 +1,8 @@
 ///! https://github.com/raydium-io/raydium-clmm/blob/master/programs/amm/src/libraries/tick_math.rs
 
-use crate::{error::ErrorCode, libraries::big_num::U128, SQRT_PRICE_X64_MAX, SQRT_PRICE_X64_MIN, TICK_MAX};
+use crate::{error::ErrorCode, libraries::big_num::U128, 
+        constants::SQRT_PRICE_X64_MAX, constants::SQRT_PRICE_X64_MIN, 
+        constants::TICK_MAX};
 
 use anchor_lang::require;
 
@@ -179,7 +181,7 @@ mod tick_math_test {
     use super::*;
     mod get_sqrt_price_at_tick_test {
         use super::*;
-        use crate::{libraries::fixed_point_64, TICK_MIN};
+        use crate::{libraries::fixed_point_64, constants::TICK_MIN};
 
         #[test]
         fn check_get_sqrt_price_at_tick_at_min_or_TICK_MAX() {
@@ -199,7 +201,7 @@ mod tick_math_test {
     }
 
     mod get_tick_at_sqrt_price_test {
-        use crate::TICK_MIN;
+        use crate::constants::TICK_MIN;
 
         use super::*;
 
@@ -244,7 +246,7 @@ mod tick_math_test {
     }
 
     mod fuzz_tests {
-        use crate::TICK_MIN;
+        use crate::constants::TICK_MIN;
 
         use super::*;
         use proptest::prelude::*;

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::Mint;
 
-use crate::POOL_SEED;
+use crate::constants::POOL_SEED;
 
 #[account(zero_copy)]
 #[repr(C, packed)]

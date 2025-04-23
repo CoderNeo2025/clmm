@@ -2,8 +2,18 @@ use anchor_lang::zero_copy;
 use anchor_lang::prelude::*;
 
 use crate::libraries::big_num::U256;
-use crate::{TICK_ARRAY_BITMAP_SIZE, TICK_ARRAY_SIZE};
+use crate::{constants::TICK_ARRAY_BITMAP_SIZE, constants::TICK_ARRAY_SIZE};
 
+#[macro_export]
+macro_rules! tick_index_check{
+    ($tick: expr, $spacing: expr) => {
+        require!(
+            ($tick).abs()%(($spacing) as i32) == 0 &&
+            ($tick).abs() <= crate::constants::TICK_MAX, 
+            crate::error::ErrorCode::InvalidTickIndex);
+        
+    }
+}
 
 #[zero_copy]
 #[repr(C, packed)]
