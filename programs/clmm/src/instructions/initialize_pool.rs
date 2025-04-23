@@ -1,33 +1,40 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token_interface::Mint;
+use anchor_spl::token_interface::TokenAccount;
+use anchor_spl::token_interface::TokenInterface;
 
 use crate::libraries::tick_math;
 use crate::PoolState;
 use crate::TickStateArrayBitMap;
 use crate::ANCHOR_SIZE;
 use crate::POOL_SEED;
+use crate::POOL_VAULT_SEED;
 use crate::SQRT_PRICE_X64_MAX;
 use crate::SQRT_PRICE_X64_MIN;
 use crate::TICK_ARRAY_BITMAP_SEED;
 use crate::error::ErrorCode;
 
 #[derive(Accounts)]
-#[instruction(token0: Pubkey, token1: Pubkey)]
 pub struct InitializePool<'info> {
     #[account(mut)]
-    pub signer: Signer<'info>,
+    pub pool_creator: Signer<'info>,
 
     #[account(
-        init_if_needed,
-        payer = signer,
+        init,
+        payer = pool_creator,
         space = ANCHOR_SIZE + PoolState::LEN,
-        seeds = [POOL_SEED.as_bytes(), token0.as_ref(), token1.as_ref()],
+        seeds = [
+            POOL_SEED.as_bytes(), 
+            token0.key().as_ref(), 
+            token1.key().as_ref()
+        ],
         bump
     )]
     pub pool_state: AccountLoader<'info, PoolState>,
 
     #[account(
         init,
-        payer = signer,
+        payer = pool_creator,
         space = ANCHOR_SIZE + TickStateArrayBitMap::LEN,
         seeds = [
             TICK_ARRAY_BITMAP_SEED.as_bytes(), 
@@ -36,32 +43,76 @@ pub struct InitializePool<'info> {
         bump
     )]
     pub tick_array_bitmap: AccountLoader<'info, TickStateArrayBitMap>,
+
+    #[account(
+        constraint = token0.key() < token1.key(),
+        mint::token_program = token_program0,
+    )]
+    pub token0: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        mint::token_program = token_program1
+    )]
+    pub token1: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        init,
+        seeds = [
+            POOL_VAULT_SEED.as_bytes(),
+            pool_state.key().as_ref(),
+            token0.key().as_ref(),
+        ],
+        bump,
+        payer = pool_creator,
+        token::mint = token0,
+        token::authority = pool_state,
+        token::token_program = token_program0,
+    )]
+    pub token_vault0: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    #[account(
+        init,
+        seeds = [
+            POOL_VAULT_SEED.as_bytes(),
+            pool_state.key().as_ref(),
+            token1.key().as_ref(),
+        ],
+        bump,
+        payer = pool_creator,
+        token::mint = token1,
+        token::authority = pool_state,
+        token::token_program = token_program1,
+    )]
+    pub token_vault1: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    pub token_program0: Interface<'info, TokenInterface>,
+
+    pub token_program1: Interface<'info, TokenInterface>,
+
     pub system_program: Program<'info, System>,
 }
 
-pub fn initialize_pool_impl(ctx: Context<InitializePool>, tick_spacing: u16,
-               token0: Pubkey, token1: Pubkey, sqrt_price_x64: u128,
-               fee_ratio: u32, protocol_fee: u32) -> Result<()> {
+pub fn initialize_pool_impl(ctx: Context<InitializePool>, 
+               tick_spacing: u16,sqrt_price_x64: u128,
+               fee_rate: u32, protocol_fee_rate: u32) -> Result<()> {
     require!(tick_spacing > 0, ErrorCode::TickSpacingZero);
-    require!(token0 < token1, ErrorCode::TokenPairOrder);
     require!(sqrt_price_x64 <= SQRT_PRICE_X64_MAX && sqrt_price_x64 >= SQRT_PRICE_X64_MIN,
             ErrorCode::SqrtPriceX64);
     let pool_state = &mut ctx.accounts.pool_state.load_init()?;
-    pool_state.bump = ctx.bumps.pool_state;
-    pool_state.tick_spacing = tick_spacing;
-    pool_state.token0 = token0;
-    pool_state.token1 = token1;
-    pool_state.fee_rate = fee_ratio;
-    pool_state.protocol_fee_ratio = protocol_fee;
-    pool_state.sqrt_price_x64 = sqrt_price_x64;
-    pool_state.tick_current = tick_math::get_tick_at_sqrt_price(sqrt_price_x64)?;
+    pool_state.initialize(
+        ctx.bumps.pool_state, 
+        tick_spacing, 
+        fee_rate, 
+        protocol_fee_rate, 
+        sqrt_price_x64, 
+        tick_math::get_tick_at_sqrt_price(sqrt_price_x64)?, 
+        ctx.accounts.token_vault0.key(), 
+        ctx.accounts.token_vault1.key(), 
+        ctx.accounts.token0.as_ref(), 
+        ctx.accounts.token1.as_ref())?;
 
-    pool_state.fee_growth_global0_x64 = 0;
-    pool_state.fee_growth_global1_x64 = 0;
-    pool_state.protocol_fees0 = 0;
-    pool_state.protocol_fees1 = 0;
-    pool_state.liquidity = 0;
-
-    msg!("Pool for {} and {} has been created", token0, token1);
+    msg!("Pool for {} and {} has been created", 
+          ctx.accounts.token0.key(), 
+          ctx.accounts.token1.key());
     Ok(())
 }

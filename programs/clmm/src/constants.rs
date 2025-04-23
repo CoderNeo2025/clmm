@@ -10,6 +10,9 @@ pub const SEED: &str = "anchor";
 pub const POOL_SEED: &str = "clmm_pool";
 
 #[constant]
+pub const POOL_VAULT_SEED: &str = "token_vault";
+
+#[constant]
 pub const TICK_SEED: &str = "clmm_tick";
 
 #[constant]

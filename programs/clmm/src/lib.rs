@@ -17,10 +17,10 @@ declare_id!("FAsGDFLK4uPpSuJPJYzXx6iWR3f3w6hvtcXCsVX5maS5");
 pub mod clmm {
     use super::*;
 
-    pub fn initialize_pool(ctx: Context<InitializePool>, tick_spacing: u16,
-                           token0: Pubkey, token1: Pubkey, sqrt_price_x64: u128,
+    pub fn initialize_pool(ctx: Context<InitializePool>, 
+                           tick_spacing: u16,sqrt_price_x64: u128,
                            fee_ratio: u32, protocol_fee: u32) -> Result<()> {
-        instructions::initialize_pool_impl(ctx, tick_spacing, token0, token1, sqrt_price_x64, fee_ratio, protocol_fee)
+        instructions::initialize_pool_impl(ctx, tick_spacing, sqrt_price_x64, fee_ratio, protocol_fee)
     }
 
     pub fn add_liquidity(_ctx: Context<Initialize>) -> Result<()> {

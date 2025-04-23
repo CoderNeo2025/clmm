@@ -65,4 +65,10 @@ impl TickStateArrayBitMap {
         32 +
         8 * TICK_ARRAY_BITMAP_SIZE +
         8 * TICK_ARRAY_BITMAP_SIZE;
+
+    pub fn initialize(&mut self, pool_id: Pubkey) {
+        self.pool_id = pool_id;
+        self.bitmap_pos = [0; TICK_ARRAY_BITMAP_SIZE];
+        self.bitmap_neg = [0; TICK_ARRAY_BITMAP_SIZE];
+    }
 }
