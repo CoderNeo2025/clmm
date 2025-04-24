@@ -15,6 +15,8 @@ pub enum ErrorCode {
     TokenPairOrder,
     #[msg("Invalid tick index value")]
     InvalidTickIndex,
+    #[msg("Invalid tick index order: tick_lower should be smaller than tick_upper")]
+    InvalidTickIndexOrder,
 
     // Liquidity Sub
     #[msg("Liquidity sub delta L must be smaller than before")]
@@ -28,7 +30,11 @@ pub enum ErrorCode {
     ForbidBothZeroForSupplyLiquidity,
     #[msg("Liquidity insufficient")]
     LiquidityInsufficient,
+    #[msg("Liquidity can't be zero when open position")]
+    LiquidityZero,
 
     #[msg("Max token overflow")]
     MaxTokenOverflow,
+    #[msg("Slippage limit is exceeded")]
+    SlippageLimitExceeded,
 }

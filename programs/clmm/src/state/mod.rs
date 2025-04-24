@@ -8,8 +8,7 @@ pub use pool::*;
 
 use anchor_lang::prelude::*;
 
-#[account(zero_copy)]
-#[repr(C, packed)]
+#[account]
 #[derive(Default, Debug)]
 pub struct PositionState {
     pub liquidity: u128,
