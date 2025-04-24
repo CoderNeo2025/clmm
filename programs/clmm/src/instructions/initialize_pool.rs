@@ -25,8 +25,8 @@ pub struct InitializePool<'info> {
         space = ANCHOR_SIZE + PoolState::LEN,
         seeds = [
             POOL_SEED.as_bytes(), 
-            token0.key().as_ref(), 
-            token1.key().as_ref()
+            token_0.key().as_ref(), 
+            token_1.key().as_ref()
         ],
         bump
     )]
@@ -45,28 +45,28 @@ pub struct InitializePool<'info> {
     pub tick_array_bitmap: AccountLoader<'info, TickStateArrayBitMap>,
 
     #[account(
-        constraint = token0.key() < token1.key(),
-        mint::token_program = token_program0,
+        constraint = token_0.key() < token_1.key(),
+        mint::token_program = token_program_0,
     )]
-    pub token0: Box<InterfaceAccount<'info, Mint>>,
+    pub token_0: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
-        mint::token_program = token_program1
+        mint::token_program = token_program_1
     )]
-    pub token1: Box<InterfaceAccount<'info, Mint>>,
+    pub token_1: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         init,
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
-            token0.key().as_ref(),
+            token_0.key().as_ref(),
         ],
         bump,
         payer = pool_creator,
-        token::mint = token0,
+        token::mint = token_0,
         token::authority = pool_state,
-        token::token_program = token_program0,
+        token::token_program = token_program_0,
     )]
     pub token_vault0: Box<InterfaceAccount<'info, TokenAccount>>,
 
@@ -75,19 +75,19 @@ pub struct InitializePool<'info> {
         seeds = [
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
-            token1.key().as_ref(),
+            token_1.key().as_ref(),
         ],
         bump,
         payer = pool_creator,
-        token::mint = token1,
+        token::mint = token_1,
         token::authority = pool_state,
-        token::token_program = token_program1,
+        token::token_program = token_program_1,
     )]
-    pub token_vault1: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub token_vault_1: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    pub token_program0: Interface<'info, TokenInterface>,
+    pub token_program_0: Interface<'info, TokenInterface>,
 
-    pub token_program1: Interface<'info, TokenInterface>,
+    pub token_program_1: Interface<'info, TokenInterface>,
 
     pub system_program: Program<'info, System>,
 }
@@ -107,12 +107,12 @@ pub fn initialize_pool_impl(ctx: Context<InitializePool>,
         sqrt_price_x64, 
         tick_math::get_tick_at_sqrt_price(sqrt_price_x64)?, 
         ctx.accounts.token_vault0.key(), 
-        ctx.accounts.token_vault1.key(), 
-        ctx.accounts.token0.as_ref(), 
-        ctx.accounts.token1.as_ref())?;
+        ctx.accounts.token_vault_1.key(), 
+        ctx.accounts.token_0.as_ref(), 
+        ctx.accounts.token_1.as_ref())?;
 
     msg!("Pool for {} and {} has been created", 
-          ctx.accounts.token0.key(), 
-          ctx.accounts.token1.key());
+          ctx.accounts.token_0.key(), 
+          ctx.accounts.token_1.key());
     Ok(())
 }

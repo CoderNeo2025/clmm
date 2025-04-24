@@ -12,8 +12,8 @@ use anchor_lang::prelude::*;
 #[derive(Default, Debug)]
 pub struct PositionState {
     pub liquidity: u128,
-    pub fee_growth_inside0_last_x64: u128,
-    pub fee_growth_inside1_last_x64: u128,
+    pub fee_growth_inside_0_last_x64: u128,
+    pub fee_growth_inside_1_last_x64: u128,
 }
 
 impl PositionState {

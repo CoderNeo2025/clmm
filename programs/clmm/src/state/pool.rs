@@ -8,24 +8,24 @@ use crate::constants::POOL_SEED;
 #[derive(Default, Debug)]
 pub struct PoolState {
     pub bump: [u8; 1],
-    pub token_decimals0: u8,
-    pub token_decimals1: u8,
+    pub token_decimals_0: u8,
+    pub token_decimals_1: u8,
     pub tick_spacing: u16,
     pub tick_current: i32,
-    pub token0: Pubkey,
-    pub token1: Pubkey,
+    pub token_0: Pubkey,
+    pub token_1: Pubkey,
     pub token_vault_0: Pubkey,
     pub token_vault_1: Pubkey,
     pub fee_rate: u32, // units of hundredths of a basis point(0.0001%)
     pub protocol_fee_rate: u32,
 
     pub liquidity: u128,
-    /// sqrt(token1/token0), Q64.64 value
+    /// sqrt(token_1/token_0), Q64.64 value
     pub sqrt_price_x64: u128,
-    pub fee_growth_global0_x64: u128,
-    pub fee_growth_global1_x64: u128,
-    pub protocol_fees0: u128,
-    pub protocol_fees1: u128,
+    pub fee_growth_global_0_x64: u128,
+    pub fee_growth_global_1_x64: u128,
+    pub protocol_fees_0: u128,
+    pub protocol_fees_1: u128,
 }
 
 impl PoolState {
@@ -49,8 +49,8 @@ impl PoolState {
     pub fn seeds(&self) -> [&[u8]; 4] {
         [
             &POOL_SEED.as_bytes(),
-            self.token0.as_ref(),
-            self.token1.as_ref(),
+            self.token_0.as_ref(),
+            self.token_1.as_ref(),
             self.bump.as_ref(),
         ]
     }
@@ -67,28 +67,28 @@ impl PoolState {
         protocol_fee_rate: u32,
         sqrt_price_x64: u128,
         tick: i32,
-        token_vault0: Pubkey,
-        token_vault1: Pubkey,
-        token0: &InterfaceAccount<Mint>,
-        token1: &InterfaceAccount<Mint>,
+        token_vault_0: Pubkey,
+        token_vault_1: Pubkey,
+        token_0: &InterfaceAccount<Mint>,
+        token_1: &InterfaceAccount<Mint>,
     ) -> Result<()> {
         self.bump = [bump];
         self.fee_rate = fee_rate;
         self.protocol_fee_rate = protocol_fee_rate;
-        self.token0 = token0.key();
-        self.token1 = token1.key();
-        self.token_decimals0 = token0.decimals;
-        self.token_decimals1 = token1.decimals;
-        self.token_vault_0 = token_vault0;
-        self.token_vault_1 = token_vault1;
+        self.token_0 = token_0.key();
+        self.token_1 = token_1.key();
+        self.token_decimals_0 = token_0.decimals;
+        self.token_decimals_1 = token_1.decimals;
+        self.token_vault_0 = token_vault_0;
+        self.token_vault_1 = token_vault_1;
         self.tick_spacing = tick_spacing;
         self.tick_current = tick;
         self.sqrt_price_x64 = sqrt_price_x64;
 
-        self.fee_growth_global0_x64 = 0;
-        self.fee_growth_global1_x64 = 0;
-        self.protocol_fees0 = 0;
-        self.protocol_fees1 = 0;
+        self.fee_growth_global_0_x64 = 0;
+        self.fee_growth_global_1_x64 = 0;
+        self.protocol_fees_0 = 0;
+        self.protocol_fees_1 = 0;
         self.liquidity = 0;
         Ok(())
     }
