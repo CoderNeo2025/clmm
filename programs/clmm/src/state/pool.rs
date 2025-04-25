@@ -19,6 +19,8 @@ pub struct PoolState {
     pub fee_rate: u32, // units of hundredths of a basis point(0.0001%)
     pub protocol_fee_rate: u32,
 
+    pub tick_array_bitmap: Pubkey,
+
     pub liquidity: u128,
     /// sqrt(token_1/token_0), Q64.64 value
     pub sqrt_price_x64: u128,
@@ -39,6 +41,7 @@ impl PoolState {
         32 +
         4 +
         4 +
+        32 +
         16 +
         16 +
         16 +
@@ -71,6 +74,7 @@ impl PoolState {
         token_vault_1: Pubkey,
         token_0: &InterfaceAccount<Mint>,
         token_1: &InterfaceAccount<Mint>,
+        bitmap: Pubkey
     ) -> Result<()> {
         self.bump = [bump];
         self.fee_rate = fee_rate;
@@ -84,6 +88,8 @@ impl PoolState {
         self.tick_spacing = tick_spacing;
         self.tick_current = tick;
         self.sqrt_price_x64 = sqrt_price_x64;
+
+        self.tick_array_bitmap = bitmap;
 
         self.fee_growth_global_0_x64 = 0;
         self.fee_growth_global_1_x64 = 0;

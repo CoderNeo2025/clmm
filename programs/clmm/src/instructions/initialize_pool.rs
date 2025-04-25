@@ -109,7 +109,14 @@ pub fn initialize_pool_impl(ctx: Context<InitializePool>,
         ctx.accounts.token_vault0.key(), 
         ctx.accounts.token_vault_1.key(), 
         ctx.accounts.token_0.as_ref(), 
-        ctx.accounts.token_1.as_ref())?;
+        ctx.accounts.token_1.as_ref(),
+        ctx.accounts.tick_array_bitmap.key()
+    )?;
+
+    ctx.accounts
+       .tick_array_bitmap
+       .load_mut()?
+       .initialize(pool_state.key());
 
     msg!("Pool for {} and {} has been created", 
           ctx.accounts.token_0.key(), 

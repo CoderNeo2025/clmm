@@ -1,8 +1,14 @@
 use anchor_lang::zero_copy;
 use anchor_lang::prelude::*;
+use solana_program::program::invoke_signed;
+use solana_program::system_instruction;
 
+use crate::constants::ANCHOR_SIZE;
+use crate::constants::TICK_ARRAY_SEED;
 use crate::libraries::big_num::U256;
 use crate::{constants::TICK_ARRAY_BITMAP_SIZE, constants::TICK_ARRAY_SIZE};
+
+use super::PoolState;
 
 #[macro_export]
 macro_rules! tick_index_check{
@@ -59,6 +65,62 @@ impl TickStateArray {
         4 +
         4 +
         TickState::LEN * TICK_ARRAY_SIZE;
+    pub fn initialize(&mut self, pool_id: Pubkey, start_idx: i32) {
+        self.pool_id = pool_id;
+        self.tick_start_idx = start_idx;
+        self.tick_valid_cnt = 0;
+        self.tick_states = [TickState::default(); TICK_ARRAY_SIZE];
+    }
+
+    pub fn start_idx_from_tick(tick: i32) -> i32 {
+        if tick >= 0 {
+            tick / (TICK_ARRAY_SIZE as i32)
+        } else {
+            tick / (TICK_ARRAY_SIZE as i32) - 1
+        }
+    }
+
+    pub fn get_or_create_tick_array<'info>(
+        tick_array_account: &'info mut AccountInfo<'info>,
+        payer: AccountInfo<'info>,
+        system_program: AccountInfo<'info>,
+        pool_state_loader: &AccountLoader<'info, PoolState>,
+        start_idx: i32,
+        bump: u8
+    ) -> Result<AccountLoader<'info, TickStateArray>> {
+        let space = TickStateArray::LEN + ANCHOR_SIZE;
+        let rent = Rent::get()?;
+        let lamports = rent.minimum_balance(space);
+        let account_lamports = tick_array_account.lamports();
+        if account_lamports >= lamports {
+            // TickStateArray has been created.
+            return AccountLoader::<'info, TickStateArray>::try_from(tick_array_account);
+        } else if account_lamports < lamports && account_lamports > 0 {
+            unreachable!("TickStateArray's space is fixed. This condition should never be true.")
+        } else { // == 0
+            let instr = system_instruction::create_account(
+                &payer.key(), 
+                &tick_array_account.key(), 
+                lamports, 
+                space as u64, 
+                &crate::id());
+            invoke_signed(
+            &instr, 
+            &[
+                payer, 
+                tick_array_account.clone(), 
+                system_program.to_account_info()], 
+            &[
+                &[TICK_ARRAY_SEED.as_bytes()],
+                &[pool_state_loader.key().as_ref()],
+                &[start_idx.to_le_bytes().as_ref()],
+                &[bump.to_le_bytes().as_ref()]]
+            )?;
+
+            
+        }
+        todo!()
+    }
 }
 
 #[account(zero_copy)]

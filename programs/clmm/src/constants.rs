@@ -13,7 +13,7 @@ pub const POOL_SEED: &str = "clmm_pool";
 pub const POOL_VAULT_SEED: &str = "token_vault";
 
 #[constant]
-pub const TICK_SEED: &str = "clmm_tick";
+pub const TICK_ARRAY_SEED: &str = "clmm_tick_array";
 
 #[constant]
 pub const POSITION_SEED: &str = "clmm_position";
