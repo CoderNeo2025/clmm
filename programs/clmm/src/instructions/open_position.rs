@@ -9,6 +9,7 @@ use crate::constants::{ANCHOR_SIZE, POSITION_SEED, TICK_ARRAY_SEED};
 use crate::libraries::liquidity_math;
 use crate::state::{PoolState, PositionState, TickStateArray};
 use crate::error::ErrorCode;
+use crate::util::AccountLoad;
 
 #[derive(Accounts)]
 #[instruction(tick_lower: i32, tick_upper: i32)]
@@ -151,54 +152,25 @@ impl<'info> OpenPosition<'info> {
         CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
     }
 
-    pub fn load_tick_array_lower(&'info mut self, tick_lower: i32, bump: u8) -> Result<RefMut<'info, TickStateArray>> {
-        self.load_tick_array(
-            &mut self.tick_array_lower_account, 
-            &self.tick_array_lower_pda, 
-            tick_lower, 
-            bump)?;
-        todo!()
+    pub fn load_tick_array_lower(&'info self, tick_lower: i32, tick_spacing: u16, bump: u8) -> Result<AccountLoad<'info, TickStateArray>> {
+        TickStateArray::get_or_create_tick_array(
+            self.tick_array_lower_pda.to_account_info(), 
+            self.lp.to_account_info(),
+            self.system_program.to_account_info(), 
+            &self.pool_state, 
+            TickStateArray::get_array_start_index(tick_lower, tick_spacing), 
+            tick_spacing, 
+            bump)
     }
 
-    pub fn load_tick_array(
-            &self, 
-            maybe_account: &'info mut Option<AccountLoader<'info, TickStateArray>>,
-            pda: &'info UncheckedAccount<'info>,
-            tick:i32, bump: u8
-        ) -> Result<()> {
-        
-        if maybe_account.is_none() {
-            self.create_tick_array_account(pda, tick, bump)?;
-            let account = AccountLoader::<'info, TickStateArray>::try_from_unchecked(&crate::id(), pda)?;
-            *maybe_account = Some(account);
-            let account = maybe_account.as_mut().unwrap();
-            let mut tick_array = account.load_mut()?;
-            tick_array.initialize(self.pool_state.key(), TickStateArray::start_idx_from_tick(tick));
-        }
-        Ok(())
-    }
-
-    pub fn create_tick_array_account(&self, pda: &UncheckedAccount<'info>, tick:i32, bump: u8) -> Result<()> {
-        let space = TickStateArray::LEN + ANCHOR_SIZE;
-        let rent = Rent::get()?;
-        let lamports = rent.minimum_balance(space);
-        if pda.lamports() == 0 {
-            let instr = system_instruction::create_account(
-                &self.lp.key(), &pda.key(), lamports, space as u64, &crate::id());
-            invoke_signed(
-            &instr, 
-            &[
-                self.lp.to_account_info(), 
-                pda.to_account_info(), 
-                self.system_program.to_account_info()], 
-            &[
-                &[TICK_ARRAY_SEED.as_bytes()],
-                &[self.pool_state.key().as_ref()],
-                &[tick.to_le_bytes().as_ref()],
-                &[bump.to_le_bytes().as_ref()]]
-            )?;
-        } 
-
-        Ok(())
+    pub fn load_tick_array_upper(&'info self, tick_upper: i32, tick_spacing: u16, bump: u8) -> Result<AccountLoad<'info, TickStateArray>> {
+        TickStateArray::get_or_create_tick_array(
+            self.tick_array_upper_pda.to_account_info(), 
+            self.lp.to_account_info(),
+            self.system_program.to_account_info(), 
+            &self.pool_state, 
+            TickStateArray::get_array_start_index(tick_upper, tick_spacing), 
+            tick_spacing, 
+            bump)
     }
 }

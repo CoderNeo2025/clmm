@@ -6,6 +6,7 @@ use solana_program::system_instruction;
 use crate::constants::ANCHOR_SIZE;
 use crate::constants::TICK_ARRAY_SEED;
 use crate::libraries::big_num::U256;
+use crate::util::AccountLoad;
 use crate::{constants::TICK_ARRAY_BITMAP_SIZE, constants::TICK_ARRAY_SIZE};
 
 use super::PoolState;
@@ -56,6 +57,7 @@ pub struct TickStateArray {
     pub pool_id: Pubkey,
     pub tick_start_idx: i32,
     pub tick_valid_cnt: u32,
+    pub tick_spacing: u16,
     pub tick_states: [TickState; TICK_ARRAY_SIZE],
 }
 
@@ -64,37 +66,32 @@ impl TickStateArray {
         32 +
         4 +
         4 +
+        2 +
         TickState::LEN * TICK_ARRAY_SIZE;
-    pub fn initialize(&mut self, pool_id: Pubkey, start_idx: i32) {
+    pub fn initialize(&mut self, pool_id: Pubkey, start_idx: i32, tick_spacing: u16) {
         self.pool_id = pool_id;
         self.tick_start_idx = start_idx;
         self.tick_valid_cnt = 0;
+        self.tick_spacing = tick_spacing;
         self.tick_states = [TickState::default(); TICK_ARRAY_SIZE];
     }
 
-    pub fn start_idx_from_tick(tick: i32) -> i32 {
-        if tick >= 0 {
-            tick / (TICK_ARRAY_SIZE as i32)
-        } else {
-            tick / (TICK_ARRAY_SIZE as i32) - 1
-        }
-    }
-
     pub fn get_or_create_tick_array<'info>(
-        tick_array_account: &'info mut AccountInfo<'info>,
+        tick_array_account: AccountInfo<'info>,
         payer: AccountInfo<'info>,
         system_program: AccountInfo<'info>,
         pool_state_loader: &AccountLoader<'info, PoolState>,
         start_idx: i32,
+        tick_spacing: u16,
         bump: u8
-    ) -> Result<AccountLoader<'info, TickStateArray>> {
+    ) -> Result<AccountLoad<'info, TickStateArray>> {
         let space = TickStateArray::LEN + ANCHOR_SIZE;
         let rent = Rent::get()?;
         let lamports = rent.minimum_balance(space);
         let account_lamports = tick_array_account.lamports();
         if account_lamports >= lamports {
             // TickStateArray has been created.
-            return AccountLoader::<'info, TickStateArray>::try_from(tick_array_account);
+            AccountLoad::<'info, TickStateArray>::try_from(&tick_array_account)
         } else if account_lamports < lamports && account_lamports > 0 {
             unreachable!("TickStateArray's space is fixed. This condition should never be true.")
         } else { // == 0
@@ -116,10 +113,27 @@ impl TickStateArray {
                 &[start_idx.to_le_bytes().as_ref()],
                 &[bump.to_le_bytes().as_ref()]]
             )?;
-
-            
+            let loader = AccountLoad::<TickStateArray>::try_from_unchecked(
+                &crate::ID, 
+                &tick_array_account)?;
+            loader.load_init()?
+                .initialize(pool_state_loader.key().clone(), start_idx, tick_spacing);
+            Ok(loader)
         }
-        todo!()
+    }
+
+    /// Input an arbitrary tick_index, output the start_index of the tick_array it sits on
+    pub fn get_array_start_index(tick_index: i32, tick_spacing: u16) -> i32 {
+        let ticks_in_array = TickStateArray::tick_count(tick_spacing);
+        let mut start = tick_index / ticks_in_array;
+        if tick_index < 0 && tick_index % ticks_in_array != 0 {
+            start = start - 1
+        }
+        start * ticks_in_array
+    }
+
+    pub fn tick_count(tick_spacing: u16) -> i32 {
+        TICK_ARRAY_SIZE as i32 * i32::from(tick_spacing)
     }
 }
 
