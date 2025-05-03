@@ -1,11 +1,10 @@
 use anchor_lang::zero_copy;
 use anchor_lang::prelude::*;
-use solana_program::program::invoke_signed;
-use solana_program::system_instruction;
+use anchor_lang::solana_program::program::invoke_signed;
+use anchor_lang::solana_program::system_instruction;
 
 use crate::constants::ANCHOR_SIZE;
 use crate::constants::TICK_ARRAY_SEED;
-use crate::libraries::big_num::U256;
 use crate::libraries::liquidity_math;
 use crate::util::AccountLoad;
 use crate::error::ErrorCode;
@@ -24,7 +23,7 @@ macro_rules! tick_index_check{
     }
 }
 
-#[zero_copy]
+#[account(zero_copy)]
 #[repr(C, packed)]
 #[derive(Default, Debug)]
 pub struct TickState {
@@ -35,9 +34,9 @@ pub struct TickState {
     pub liquidity_gross: u128,
     pub fee_growth_outside_0_x64: u128,
     pub fee_growth_outside_1_x64: u128,
-    pub seconds_outside: U256,
-    pub tick_cumulative_outside: U256,
-    pub seconds_per_liquidity_outside_x128: U256,
+    // pub seconds_outside: U256,
+    // pub tick_cumulative_outside: U256,
+    // pub seconds_per_liquidity_outside_x128: U256,
 }
 
 impl TickState {
@@ -46,9 +45,10 @@ impl TickState {
         16 +
         16 +
         16 +
-        32 +
-        32 +
-        32;
+        // 32 +
+        // 32 +
+        // 32
+        0 ;
     pub fn update(
         &mut self,
         pool_state: &PoolState,
@@ -90,7 +90,7 @@ pub struct TickStateArray {
     pub tick_start_idx: i32,
     pub tick_valid_cnt: u32,
     pub tick_spacing: u16,
-    pub tick_states: [TickState; TICK_ARRAY_SIZE],
+    pub tick_states: [TickState; TICK_ARRAY_SIZE as usize],
 }
 
 impl TickStateArray {
@@ -99,13 +99,13 @@ impl TickStateArray {
         4 +
         4 +
         2 +
-        TickState::LEN * TICK_ARRAY_SIZE;
+        TickState::LEN * TICK_ARRAY_SIZE as usize;
     pub fn initialize(&mut self, pool_id: Pubkey, start_idx: i32, tick_spacing: u16) {
         self.pool_id = pool_id;
         self.tick_start_idx = start_idx;
         self.tick_valid_cnt = 0;
         self.tick_spacing = tick_spacing;
-        self.tick_states = [TickState::default(); TICK_ARRAY_SIZE];
+        self.tick_states = [TickState::default(); TICK_ARRAY_SIZE as usize];
     }
 
     pub fn get_or_create_tick_array<'info>(
@@ -117,7 +117,7 @@ impl TickStateArray {
         tick_spacing: u16,
         bump: u8
     ) -> Result<AccountLoad<'info, TickStateArray>> {
-        let space = TickStateArray::LEN + ANCHOR_SIZE;
+        let space = TickStateArray::LEN + ANCHOR_SIZE as usize;
         let rent = Rent::get()?;
         let lamports = rent.minimum_balance(space);
         let account_lamports = tick_array_account.lamports();
@@ -182,7 +182,7 @@ impl TickStateArray {
         require!(tick_index >= start_index, ErrorCode::TickLowerThanArrayStart);
         let offset = (tick_index - start_index) / (tick_spacing as i32);
         let offset = offset.try_into()?;
-        require!(offset < TICK_ARRAY_SIZE, ErrorCode::TickIndexOutOfBounds);
+        require!(offset < TICK_ARRAY_SIZE as usize, ErrorCode::TickIndexOutOfBounds);
         Ok(offset)
     }
 
@@ -210,20 +210,20 @@ impl TickStateArray {
 #[derive(Debug)]
 pub struct TickStateArrayBitMap {
     pub pool_id: Pubkey,
-    pub bitmap_pos: [u64; TICK_ARRAY_BITMAP_SIZE],
-    pub bitmap_neg: [u64; TICK_ARRAY_BITMAP_SIZE],
+    pub bitmap_pos: [u64; TICK_ARRAY_BITMAP_SIZE as usize],
+    pub bitmap_neg: [u64; TICK_ARRAY_BITMAP_SIZE as usize],
 }
 
 impl TickStateArrayBitMap {
     pub const LEN: usize =
         32 +
-        8 * TICK_ARRAY_BITMAP_SIZE +
-        8 * TICK_ARRAY_BITMAP_SIZE;
+        8 * TICK_ARRAY_BITMAP_SIZE as usize +
+        8 * TICK_ARRAY_BITMAP_SIZE as usize;
 
     pub fn initialize(&mut self, pool_id: Pubkey) {
         self.pool_id = pool_id;
-        self.bitmap_pos = [0; TICK_ARRAY_BITMAP_SIZE];
-        self.bitmap_neg = [0; TICK_ARRAY_BITMAP_SIZE];
+        self.bitmap_pos = [0; TICK_ARRAY_BITMAP_SIZE as usize];
+        self.bitmap_neg = [0; TICK_ARRAY_BITMAP_SIZE as usize];
     }
 
     pub fn flip(&mut self, tick_index: i32, tick_spacing: u16) -> Result<()> {

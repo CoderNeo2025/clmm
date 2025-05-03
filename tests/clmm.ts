@@ -8,9 +8,9 @@ describe("clmm", () => {
 
   const program = anchor.workspace.clmm as Program<Clmm>;
 
-  it("Is initialized!", async () => {
+  it("InitializePool", async () => {
     // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
+    // const tx = await program.methods.initializePool().rpc();
+    // console.log("Your transaction signature", tx);
   });
 });

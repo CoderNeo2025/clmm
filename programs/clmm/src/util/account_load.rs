@@ -1,8 +1,8 @@
 use anchor_lang::error::{Error, ErrorCode};
 use anchor_lang::{Key, Owner, Result, ToAccountInfos, ZeroCopy};
 use arrayref::array_ref;
-use solana_program::account_info::AccountInfo;
-use solana_program::pubkey::Pubkey;
+use anchor_lang::solana_program::account_info::AccountInfo;
+use anchor_lang::solana_program::pubkey::Pubkey;
 use std::cell::{Ref, RefMut};
 use std::marker::PhantomData;
 use std::mem;

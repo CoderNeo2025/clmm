@@ -19,4 +19,15 @@ pub mod clmm {
                            fee_ratio: u32, protocol_fee: u32) -> Result<()> {
         instructions::initialize_pool_impl(ctx, tick_spacing, sqrt_price_x64, fee_ratio, protocol_fee)
     }
+
+    pub fn open_position(
+        ctx: Context<OpenPosition>,
+        tick_lower: i32,
+        tick_upper: i32,
+        liquidity: u128,
+        amount_0_max: u64,
+        amount_1_max: u64,
+    ) -> Result<()> {
+        open_position_impl(ctx, tick_lower, tick_upper, liquidity, amount_0_max, amount_1_max)
+    }
 }

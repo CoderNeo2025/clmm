@@ -29,9 +29,3 @@ construct_uint!{
 }
 
 impl_big_num!(U512, 64);
-
-construct_uint!{
-    pub struct U1024(16);
-}
-
-impl_big_num!(U1024, 128);

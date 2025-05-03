@@ -22,7 +22,7 @@ pub struct InitializePool<'info> {
     #[account(
         init,
         payer = pool_creator,
-        space = ANCHOR_SIZE + PoolState::LEN,
+        space = ANCHOR_SIZE as usize + PoolState::LEN,
         seeds = [
             POOL_SEED.as_bytes(), 
             token_0.key().as_ref(), 
@@ -35,7 +35,7 @@ pub struct InitializePool<'info> {
     #[account(
         init,
         payer = pool_creator,
-        space = ANCHOR_SIZE + TickStateArrayBitMap::LEN,
+        space = ANCHOR_SIZE as usize + TickStateArrayBitMap::LEN,
         seeds = [
             TICK_ARRAY_BITMAP_SEED.as_bytes(), 
             pool_state.key().as_ref()

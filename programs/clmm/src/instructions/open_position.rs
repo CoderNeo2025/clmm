@@ -20,7 +20,7 @@ pub struct OpenPosition<'info> {
     #[account(
         init,
         payer = lp,
-        space = ANCHOR_SIZE + PositionState::LEN,
+        space = ANCHOR_SIZE as usize + PositionState::LEN,
         seeds = [
             POSITION_SEED.as_bytes(), 
             &tick_lower.to_le_bytes(),
@@ -39,7 +39,8 @@ pub struct OpenPosition<'info> {
     #[account(mut, token::mint = token_vault_1.mint)]
     pub token_account_1: Box<Account<'info, TokenAccount>>,
 
-    // Just avoid to compute the PDA on chain.
+    /// CHECK: Account to store data for the position's lower tick
+    /// Just avoid to compute the PDA on chain.
     #[account(
         seeds = [
             TICK_ARRAY_SEED.as_bytes(),
@@ -50,7 +51,8 @@ pub struct OpenPosition<'info> {
     )]
     pub tick_array_lower_pda: UncheckedAccount<'info>,
 
-    // Just avoid to compute the PDA on chain.
+    /// CHECK: Account to store data for the position's lower tick
+    /// Just avoid to compute the PDA on chain.
     #[account(
         seeds = [
             TICK_ARRAY_SEED.as_bytes(),
