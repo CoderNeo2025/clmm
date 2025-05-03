@@ -17,6 +17,12 @@ pub enum ErrorCode {
     InvalidTickIndex,
     #[msg("Invalid tick index order: tick_lower should be smaller than tick_upper")]
     InvalidTickIndexOrder,
+    #[msg("Tick index is lower than array's start index")]
+    TickLowerThanArrayStart,
+    #[msg("Tick index is out of array bounds")]
+    TickIndexOutOfBounds,
+    #[msg("Cannot initialize tick with zero or negative liquidity")]
+    InitializeTickWithZeroOrNegLiquidity,
 
     // Liquidity Sub
     #[msg("Liquidity sub delta L must be smaller than before")]
@@ -37,4 +43,7 @@ pub enum ErrorCode {
     MaxTokenOverflow,
     #[msg("Slippage limit is exceeded")]
     SlippageLimitExceeded,
+
+    #[msg("Remaining account is missed")]
+    RemainingAccountMissed,
 }

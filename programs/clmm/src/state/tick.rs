@@ -6,7 +6,9 @@ use solana_program::system_instruction;
 use crate::constants::ANCHOR_SIZE;
 use crate::constants::TICK_ARRAY_SEED;
 use crate::libraries::big_num::U256;
+use crate::libraries::liquidity_math;
 use crate::util::AccountLoad;
+use crate::error::ErrorCode;
 use crate::{constants::TICK_ARRAY_BITMAP_SIZE, constants::TICK_ARRAY_SIZE};
 
 use super::PoolState;
@@ -31,8 +33,8 @@ pub struct TickState {
     pub liquidity_net: i128,
     /// A gross tally of liquidity referencing the tick
     pub liquidity_gross: u128,
-    pub fee_growth_outside0_x64: u128,
-    pub fee_growth_outside1_64: u128,
+    pub fee_growth_outside_0_x64: u128,
+    pub fee_growth_outside_1_x64: u128,
     pub seconds_outside: U256,
     pub tick_cumulative_outside: U256,
     pub seconds_per_liquidity_outside_x128: U256,
@@ -47,7 +49,37 @@ impl TickState {
         32 +
         32 +
         32;
+    pub fn update(
+        &mut self,
+        pool_state: &PoolState,
+        tick_index: i32, 
+        liquidity_delta: i128,
+        is_upper: bool,
+    ) -> Result<bool> {
+        let is_initializing = !self.valid();
+        if is_initializing {
+            require!(liquidity_delta > 0, ErrorCode::InitializeTickWithZeroOrNegLiquidity);
+            if pool_state.tick_current >= tick_index {
+                self.fee_growth_outside_0_x64 = pool_state.fee_growth_global_0_x64;
+                self.fee_growth_outside_1_x64 = pool_state.fee_growth_global_1_x64;
+            }
+        }
+        self.liquidity_gross = liquidity_math::add_delta(self.liquidity_gross, liquidity_delta)?;
+        if is_upper {
+            self.liquidity_net = self.liquidity_net.checked_sub(liquidity_delta).unwrap();
+        } else {
+            self.liquidity_net = self.liquidity_net.checked_add(liquidity_delta).unwrap();
+        }
 
+        if !self.valid() {
+            *self = Self::default();
+        }
+        Ok(is_initializing)
+    }
+
+    pub fn valid(&self) -> bool {
+        self.liquidity_gross != 0
+    }
 }
 
 #[account(zero_copy)]
@@ -122,6 +154,42 @@ impl TickStateArray {
         }
     }
 
+    pub fn update_tick(
+        &mut self,
+        pool_state: &PoolState,
+        tick_index: i32, 
+        liquidity_delta: i128,
+        is_upper: bool,
+    ) -> Result<bool> {
+        let valid_before = self.valid();
+        let array_index = Self::tick_index_to_array_index(
+            tick_index, 
+            self.tick_start_idx, 
+            self.tick_spacing)?;
+        let tick = &mut self.tick_states[array_index];
+        let is_initializing = tick.update(pool_state, tick_index, liquidity_delta, is_upper)?;
+        if is_initializing {
+            self.tick_valid_cnt += 1;
+        }
+        if !tick.valid() {
+            self.tick_valid_cnt -= 1;
+        }
+        let flipped = self.valid() != valid_before;
+        Ok(flipped)
+    }
+
+    pub fn tick_index_to_array_index(tick_index: i32, start_index: i32, tick_spacing: u16) -> Result<usize> {
+        require!(tick_index >= start_index, ErrorCode::TickLowerThanArrayStart);
+        let offset = (tick_index - start_index) / (tick_spacing as i32);
+        let offset = offset.try_into()?;
+        require!(offset < TICK_ARRAY_SIZE, ErrorCode::TickIndexOutOfBounds);
+        Ok(offset)
+    }
+
+    pub fn valid(&self) -> bool {
+        self.tick_valid_cnt > 0
+    }
+
     /// Input an arbitrary tick_index, output the start_index of the tick_array it sits on
     pub fn get_array_start_index(tick_index: i32, tick_spacing: u16) -> i32 {
         let ticks_in_array = TickStateArray::tick_count(tick_spacing);
@@ -138,7 +206,7 @@ impl TickStateArray {
 }
 
 #[account(zero_copy)]
-#[repr(C, packed)]
+#[repr(C)]
 #[derive(Debug)]
 pub struct TickStateArrayBitMap {
     pub pool_id: Pubkey,
@@ -156,5 +224,27 @@ impl TickStateArrayBitMap {
         self.pool_id = pool_id;
         self.bitmap_pos = [0; TICK_ARRAY_BITMAP_SIZE];
         self.bitmap_neg = [0; TICK_ARRAY_BITMAP_SIZE];
+    }
+
+    pub fn flip(&mut self, tick_index: i32, tick_spacing: u16) -> Result<()> {
+        let (bitmap, (idx, bit_idx)) = if tick_index >= 0 {
+            (&mut self.bitmap_pos, Self::locate_pos(tick_index, tick_spacing))
+        } else {
+            (&mut self.bitmap_neg, Self::locate_neg(tick_index, tick_spacing))
+        };
+        bitmap[idx] ^= 1u64 << bit_idx;
+        Ok(())
+    }
+
+    pub fn locate_pos(tick_index: i32, tick_spacing: u16) -> (usize, usize) {
+        let cnt = TickStateArray::tick_count(tick_spacing);
+        let idx = tick_index / cnt;
+        ((idx / 64) as usize, (idx % 64) as usize)
+    }
+
+    pub fn locate_neg(tick_index: i32, tick_spacing: u16) -> (usize, usize) {
+        let cnt = TickStateArray::tick_count(tick_spacing);
+        let idx = tick_index / cnt + 1;
+        ((idx / 64) as usize, (idx % 64) as usize)
     }
 }
