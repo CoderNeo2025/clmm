@@ -39,22 +39,7 @@ pub struct OpenPosition<'info> {
     #[account(mut, token::mint = token_vault_1.mint)]
     pub token_account_1: Box<Account<'info, TokenAccount>>,
 
-    // Use Option<Account<...>> to check existence + validity
-    // Anchor attempts deserialization. If it fails (account doesn't exist,
-    // wrong owner, wrong data type), this will be None.
-    // Seeds constraint ensures we're checking the *correct* PDA address.
-    #[account(
-        seeds = [
-            TICK_ARRAY_SEED.as_bytes(),
-            pool_state.key().as_ref(),
-            &tick_lower.to_le_bytes(),
-        ],
-        bump
-    )]
-    pub tick_array_lower_account: Option<AccountLoader<'info, TickStateArray>>,
-
-    // Just avoid to compute the PDA on chain when
-    // `tick_array_lower_account` is None.
+    // Just avoid to compute the PDA on chain.
     #[account(
         seeds = [
             TICK_ARRAY_SEED.as_bytes(),
@@ -65,22 +50,7 @@ pub struct OpenPosition<'info> {
     )]
     pub tick_array_lower_pda: UncheckedAccount<'info>,
 
-    // Use Option<Account<...>> to check existence + validity
-    // Anchor attempts deserialization. If it fails (account doesn't exist,
-    // wrong owner, wrong data type), this will be None.
-    // Seeds constraint ensures we're checking the *correct* PDA address.
-    #[account(
-        seeds = [
-            TICK_ARRAY_SEED.as_bytes(),
-            pool_state.key().as_ref(),
-            &tick_upper.to_le_bytes(),
-        ],
-        bump
-    )]
-    pub tick_array_upper_account: Option<AccountLoader<'info, TickStateArray>>,
-
-    // Just avoid to compute the PDA on chain when
-    // `tick_array_upper_account` is None.
+    // Just avoid to compute the PDA on chain.
     #[account(
         seeds = [
             TICK_ARRAY_SEED.as_bytes(),
